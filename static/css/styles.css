@@ -1,0 +1,93 @@
+
+
+/* Status colors for use in tables */
+.status-pending {
+    color: var(--bs-warning);
+}
+
+.status-in-progress {
+    color: var(--bs-info);
+}
+
+.status-success {
+    color: var(--bs-success);
+}
+
+.status-failed {
+    color: var(--bs-danger);
+}
+
+.status-retrying {
+    color: var(--bs-warning);
+}
+
+/* Timeline styles for file logs */
+.timeline {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: var(--bs-border-color);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    left: -1.5rem;
+    top: 0.25rem;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    padding-left: 0.5rem;
+}
+
+/* Dashboard cards hover effect */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* File list table filename truncation */
+.text-truncate-filename {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+}
+
+/* Custom footer styles */
+.footer {
+    margin-top: 2rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+/* Form input focus styles */
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Make charts responsive */
+canvas {
+    max-width: 100%;
+}

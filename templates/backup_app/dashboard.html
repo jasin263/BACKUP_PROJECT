@@ -1,0 +1,169 @@
+{% extends 'backup_app/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Dashboard | Cloud Backup Manager{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .stat-icon {
+        font-size: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="row mb-4 g-3">
+    <!-- Files Count Card -->
+    <div class="col-md-4 col-sm-6">
+        <div class="card stat-card h-100 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Files</h5>
+                        <h2 class="mb-0">{{ files_count }}</h2>
+                    </div>
+                    <div class="stat-icon text-primary">
+                        <i class="fas fa-file-archive"></i>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 5px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="card-footer bg-body">
+                <a href="{% url 'file_list' %}" class="text-decoration-none">
+                    <i class="fas fa-arrow-right me-1"></i> View all files
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Servers Count Card -->
+    <div class="col-md-4 col-sm-6">
+        <div class="card stat-card h-100 border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Servers</h5>
+                        <h2 class="mb-0">{{ servers_count }}</h2>
+                    </div>
+                    <div class="stat-icon text-info">
+                        <i class="fas fa-server"></i>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 5px;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="card-footer bg-body">
+                <a href="{% url 'server_list' %}" class="text-decoration-none">
+                    <i class="fas fa-arrow-right me-1"></i> Manage servers
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Schedules Count Card -->
+    <div class="col-md-4 col-sm-6">
+        <div class="card stat-card h-100 border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Active Schedules</h5>
+                        <h2 class="mb-0">{{ active_schedules }} <small class="text-muted fs-6">/ {{ schedules_count }}</small></h2>
+                    </div>
+                    <div class="stat-icon text-success">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 5px;">
+                    {% if schedules_count > 0 %}
+                        {% with progress=active_schedules|floatformat:0|slugify|add:"0"|div:schedules_count|floatformat:2|mul:100 %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress }}%"></div>
+                        {% endwith %}
+                    {% else %}
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-body">
+                <a href="{% url 'schedule_list' %}" class="text-decoration-none">
+                    <i class="fas fa-arrow-right me-1"></i> Manage schedules
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Transfer Status Chart -->
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-body-secondary">
+                <h5 class="card-title mb-0">Transfer Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Successful Transfers -->
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card bg-success text-white">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title mb-0">Successful</h6>
+                                        <h3 class="mb-0 mt-2">{{ success_count }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Failed Transfers -->
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title mb-0">Failed</h6>
+                                        <h3 class="mb-0 mt-2">{{ failed_count }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-times-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Transfers -->
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title mb-0">Pending</h6>
+                                        <h3 class="mb-0 mt-2">{{ pending_count }}</h3>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-hourglass-half fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rest of the template here -->
+{% endblock %}

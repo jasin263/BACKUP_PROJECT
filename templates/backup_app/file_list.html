@@ -1,0 +1,179 @@
+{% extends 'backup_app/base.html' %}
+
+{% block head_extra %}
+<meta http-equiv="refresh" content="5">
+{% endblock %}
+
+{% block title %}Backup Files | Cloud Backup Manager{% endblock %}
+
+{% block main_content %}
+<!-- Filter Controls -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'file_list' %}" class="row g-3 align-items-end">
+            <!-- Status Filter -->
+            <div class="col-md-3">
+                <label for="statusFilter" class="form-label">Status</label>
+                <select class="form-select" id="statusFilter" name="status">
+                    <option value="all" {% if status_filter == 'all' or not status_filter %}selected{% endif %}>All Status</option>
+                    {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>{{ status_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Server Filter -->
+            <div class="col-md-3">
+                <label for="serverFilter" class="form-label">Server</label>
+                <select class="form-select" id="serverFilter" name="server">
+                    <option value="all" {% if server_filter == 'all' or not server_filter %}selected{% endif %}>All Servers</option>
+                    {% for server in servers %}
+                        <option value="{{ server.id }}" {% if server_filter == server.id|stringformat:"i" %}selected{% endif %}>{{ server.name }} ({{ server.server_type }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Search Query -->
+            <div class="col-md-4">
+                <label for="searchQuery" class="form-label">Search</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchQuery" name="search" placeholder="Search by filename" value="{{ search_query }}">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+            
+            <!-- Clear Filters -->
+            <div class="col-md-2">
+                <a href="{% url 'file_list' %}" class="btn btn-outline-secondary w-100">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="mb-4">
+    <div class="btn-group">
+        <form action="{% url 'initiate_transfer_all' %}" method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sync-alt me-1"></i> Transfer All Pending
+            </button>
+        </form>
+        <form action="{% url 'retry_failed' %}" method="post" class="d-inline ms-2">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-redo-alt me-1"></i> Retry Failed
+            </button>
+        </form>
+        <button type="button" class="btn btn-success ms-2" data-bs-toggle="modal" data-bs-target="#scanModal">
+            <i class="fas fa-search me-1"></i> Scan for Files
+        </button>
+    </div>
+</div>
+
+<!-- Files Table -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Filename</th>
+                <th>Size</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Error Message</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if files %}
+                {% for file in files %}
+                    <tr>
+                        <td>
+                            {% if file.is_folder %}
+                                <i class="fas fa-folder text-warning me-1"></i>
+                            {% else %}
+                                <i class="fas fa-file text-primary me-1"></i>
+                            {% endif %}
+                            {{ file.filename }}
+                            {% if file.is_folder %}
+                                <span class="badge bg-info ms-1">Folder</span>
+                                {% if file.files_count > 1 %}({{ file.files_count }} files){% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ file.file_size|filesizeformat }}</td>
+                        <td>{{ file.source_server.name }}</td>
+                        <td>{{ file.destination_server.name }}</td>
+                        <td>
+                            {% if file.status == 'success' %}
+                                <span class="badge bg-success">Success</span>
+                            {% elif file.status == 'failed' %}
+                                <span class="badge bg-danger">Failed</span>
+                            {% elif file.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif file.status == 'in_progress' %}
+                                <span class="badge bg-info">In Progress</span>
+                            {% elif file.status == 'retrying' %}
+                                <span class="badge bg-secondary">Retrying</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ file.updated_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if file.status == 'failed' and file.error_message %}
+                                <span class="text-danger" title="{{ file.error_message }}">{{ file.error_message|truncatechars:50 }}</span>
+                            {% else %}
+                                <span>-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'file_detail' file.id %}" class="btn btn-outline-primary" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if file.status == 'pending' or file.status == 'failed' %}
+                                    <form action="{% url 'initiate_transfer' file.id %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success" title="Start Transfer">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    </form>
+                                {% elif file.status == 'in_progress' or file.status == 'retrying' %}
+                                    <form action="{% url 'cancel_transfer' file.id %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger" title="Cancel Transfer">
+                                            <i class="fas fa-stop"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <i class="fas fa-info-circle me-2"></i> No backup files found
+                        {% if status_filter or server_filter or search_query %}
+                            with the current filters
+                        {% else %}
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scanModal">
+                                    <i class="fas fa-search me-1"></i> Scan for Files
+                                </button>
+                            </div>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination (to be implemented) -->
+<nav aria-label="Backup files pagination">
+    <ul class="pagination justify-content-center">
+        <!-- Pagination links would go here -->
+    </ul>
+</nav>
+{% endblock %}

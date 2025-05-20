@@ -1,0 +1,175 @@
+{% extends 'backup_app/base.html' %}
+
+{% block title %}{{ file.filename }} | Cloud Backup Manager{% endblock %}
+
+{% block main_content %}
+<div class="mb-3">
+    <a href="{% url 'file_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Files
+    </a>
+</div>
+
+<!-- File Details Card -->
+<div class="card mb-4">
+    <div class="card-header bg-body-secondary">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">File Details</h5>
+            <div>
+                {% if file.status == 'pending' or file.status == 'failed' %}
+                    <form action="{% url 'initiate_transfer' file.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-play me-1"></i> Start Transfer
+                        </button>
+                    </form>
+                {% elif file.status == 'in_progress' or file.status == 'retrying' %}
+                    <form action="{% url 'cancel_transfer' file.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-stop me-1"></i> Cancel Transfer
+                        </button>
+                    </form>
+                {% endif %}
+                
+                {% if file.status == 'in_progress' %}
+                    <a href="{% url 'process_transfer' file.id %}" class="btn btn-info ms-2">
+                        <i class="fas fa-cogs me-1"></i> Process Transfer Now
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th style="width: 30%">Filename:</th>
+                            <td>{{ file.filename }}</td>
+                        </tr>
+                        <tr>
+                            <th>Size:</th>
+                            <td>{{ file.file_size|filesizeformat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if file.status == 'success' %}
+                                    <span class="badge bg-success">Success</span>
+                                {% elif file.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% elif file.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif file.status == 'in_progress' %}
+                                    <span class="badge bg-info">In Progress</span>
+                                {% elif file.status == 'retrying' %}
+                                    <span class="badge bg-secondary">Retrying</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created On:</th>
+                            <td>{{ file.file_created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Modified On:</th>
+                            <td>{{ file.file_modified_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th style="width: 30%">Source Server:</th>
+                            <td>{{ file.source_server.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Source Path:</th>
+                            <td><code>{{ file.source_path }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>Destination Server:</th>
+                            <td>{{ file.destination_server.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Destination Path:</th>
+                            <td><code>{{ file.destination_path }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>Retry Count:</th>
+                            <td>{{ file.retry_count }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if file.error_message %}
+        <div class="alert alert-danger mt-3" role="alert">
+            <h5 class="alert-heading">Error Details</h5>
+            <hr>
+            <pre class="mb-0">{{ file.error_message }}</pre>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-footer bg-body text-muted">
+        <small>Registered: {{ file.created_at|date:"M d, Y H:i" }} | Last Updated: {{ file.updated_at|date:"M d, Y H:i" }}</small>
+    </div>
+</div>
+
+<!-- Transfer Logs Card -->
+<div class="card">
+    <div class="card-header bg-body-secondary">
+        <h5 class="mb-0">Transfer Logs</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs %}
+                        {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp|date:"M d, Y H:i:s" }}</td>
+                                <td>
+                                    {% if log.action == 'transfer_initiated' %}
+                                        <span class="badge bg-primary">Initiated</span>
+                                    {% elif log.action == 'transfer_complete' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif log.action == 'transfer_failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% elif log.action == 'transfer_retry' %}
+                                        <span class="badge bg-warning text-dark">Retry</span>
+                                    {% elif log.action == 'transfer_cancelled' %}
+                                        <span class="badge bg-secondary">Cancelled</span>
+                                    {% elif log.action == 'file_registered' %}
+                                        <span class="badge bg-info">Registered</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ log.action }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.message|default:"-" }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                <i class="fas fa-info-circle me-2"></i> No logs found for this file
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

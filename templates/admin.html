@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Panel - Backup & Monitoring Tool{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="mb-3">Admin Panel</h1>
+        <p class="text-muted">System-wide management and monitoring</p>
+    </div>
+</div>
+
+<!-- System Statistics -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-light h-100">
+                            <div class="card-body text-center">
+                                <h3 class="display-4">{{ status_counts.pending + status_counts.in_progress }}</h3>
+                                <h5>Pending Transfers</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-success h-100">
+                            <div class="card-body text-center">
+                                <h3 class="display-4">{{ status_counts.success }}</h3>
+                                <h5>Successful Transfers</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-danger h-100">
+                            <div class="card-body text-center">
+                                <h3 class="display-4">{{ status_counts.failed }}</h3>
+                                <h5>Failed Transfers</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-bg-warning h-100">
+                            <div class="card-body text-center">
+                                <h3 class="display-4">{{ status_counts.retrying }}</h3>
+                                <h5>Retrying Transfers</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Management -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">User Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.is_admin %}
+                                    <span class="badge text-bg-primary">Admin</span>
+                                    {% else %}
+                                    <span class="badge text-bg-secondary">User</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" disabled>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" disabled>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Failed Transfers -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Failed Transfers</h5>
+            </div>
+            <div class="card-body">
+                {% if failed_files %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Filename</th>
+                                <th>User</th>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Error</th>
+                                <th>Retries</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in failed_files %}
+                            <tr>
+                                <td>{{ file.id }}</td>
+                                <td>{{ file.filename }}</td>
+                                <td>{{ file.owner.username }}</td>
+                                <td>{{ file.source_server.name }}</td>
+                                <td>{{ file.destination_server.name }}</td>
+                                <td>
+                                    <span class="text-danger text-truncate d-inline-block" style="max-width: 200px;" title="{{ file.error_message }}">
+                                        {{ file.error_message }}
+                                    </span>
+                                </td>
+                                <td>{{ file.retry_count }}</td>
+                                <td>{{ file.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    No failed transfers in the system!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

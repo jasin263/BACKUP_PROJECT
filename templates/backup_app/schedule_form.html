@@ -1,0 +1,128 @@
+{% extends 'backup_app/base.html' %}
+
+{% block title %}{% if schedule %}Edit{% else %}Add{% endif %} Schedule | Cloud Backup Manager{% endblock %}
+
+{% block main_content %}
+<div class="mb-3">
+    <a href="{% url 'schedule_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Schedules
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-body-secondary">
+        <h5 class="mb-0">{% if schedule %}Edit Schedule: {{ schedule.name }}{% else %}Add New Schedule{% endif %}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" id="scheduleForm">
+            {% csrf_token %}
+            
+            <!-- Schedule Name -->
+            <div class="mb-3">
+                <label for="id_name" class="form-label">Schedule Name</label>
+                {{ form.name }}
+                <div class="form-text">A descriptive name for this backup schedule.</div>
+                {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <!-- Source Server -->
+                <div class="col-md-6 mb-3">
+                    <label for="id_source_server" class="form-label">Source Server</label>
+                    {{ form.source_server }}
+                    <div class="form-text">Server to scan for backup files.</div>
+                    {% if form.source_server.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.source_server.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Destination Server -->
+                <div class="col-md-6 mb-3">
+                    <label for="id_destination_server" class="form-label">Destination Server</label>
+                    {{ form.destination_server }}
+                    <div class="form-text">Server to store backup files.</div>
+                    {% if form.destination_server.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.destination_server.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Frequency -->
+            <div class="mb-3">
+                <label for="id_frequency" class="form-label">Backup Frequency</label>
+                {{ form.frequency }}
+                <div class="form-text">How often to run the backup.</div>
+                {% if form.frequency.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.frequency.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Cron Expression -->
+            <div class="mb-3" id="cronExpressionField">
+                <label for="id_cron_expression" class="form-label">Cron Expression</label>
+                {{ form.cron_expression }}
+                <div class="form-text">Custom cron expression for advanced scheduling (e.g., <code>0 2 * * *</code> for daily at 2:00 AM).</div>
+                {% if form.cron_expression.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.cron_expression.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Enabled Switch -->
+            <div class="mb-3 form-check form-switch">
+                {{ form.enabled }}
+                <label class="form-check-label" for="id_enabled">Enable this schedule</label>
+                <div class="form-text">When enabled, this schedule will run automatically.</div>
+                {% if form.enabled.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.enabled.errors }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'schedule_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {% if schedule %}Update{% else %}Save{% endif %} Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to toggle cron expression field
+    function toggleCronField() {
+        const frequency = document.getElementById('id_frequency').value;
+        const cronField = document.getElementById('cronExpressionField');
+        
+        if (frequency === 'custom') {
+            cronField.style.display = 'block';
+        } else {
+            cronField.style.display = 'none';
+        }
+    }
+    
+    // Initialize the form
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up event listener for frequency change
+        document.getElementById('id_frequency').addEventListener('change', toggleCronField);
+        
+        // Initial toggle based on current value
+        toggleCronField();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends 'backup_app/base.html' %}
+
+{% block title %}{% if register %}Register{% else %}Login{% endif %} | Cloud Backup Manager{% endblock %}
+{% load static %}
+
+
+{% block extra_css %}
+<style>
+    /* Background video style */
+    #bg-video {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        min-width: 100%;
+        min-height: 100%;
+        z-index: -1;
+        object-fit: cover;
+    }
+
+    /* Dark overlay effect on cards */
+    .card {
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+    }
+
+    .card .form-label,
+    .card .form-text,
+    .card .form-check-label,
+    .card .card-title,
+    .card .card-text,
+    .list-group-item {
+        color: white;
+    }
+
+    .list-group-item {
+        background-color: transparent;
+        border: none;
+    }
+
+    a {
+        color: #c8aaff;
+    }
+
+    a:hover {
+        color: #e0cfff;
+    }
+</style>
+
+{% endblock %}
+
+
+{% block auth_content %}
+
+
+<!-- Background video (inside auth_content block so it loads with body) -->
+<video autoplay muted loop id="bg-video">
+    <source src="{% static 'videos/background.mp4' %}" type="video/mp4">
+    Your browser does not support HTML5 video.
+</video>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-body-secondary text-center">
+                <h4 class="mb-0">{% if register %}Create an Account{% else %}Login to Your Account{% endif %}</h4>
+            </div>
+            <div class="card-body p-4">
+                {% if register %}
+                    <form method="post" action="{% url 'register' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_password1" class="form-label">Password</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password1.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Password must be at least 8 characters.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="id_password2" class="form-label">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password2.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                        </div>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Password</label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-4 form-check">
+                            {{ form.remember_me }}
+                            <label class="form-check-label" for="id_remember_me">Remember Me</label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <p class="mb-0">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card mt-4 border-info">
+            <div class="card-body">
+                <h5 class="card-title">About Cloud Backup Manager</h5>
+                <p class="card-text">Cloud Backup Manager is a secure and reliable solution for automating backup transfers from cloud servers to your private infrastructure. With features like scheduled backups, real-time status tracking, and robust error handling, it keeps your important data safe and accessible.</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Secure file transfers via SFTP</li>
+                    <li class="list-group-item">Schedule automated backups</li>
+                    <li class="list-group-item">Monitor transfer status in real-time</li>
+                    <li class="list-group-item">Automatic retry for failed transfers</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
